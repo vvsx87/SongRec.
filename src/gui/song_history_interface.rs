@@ -17,25 +17,25 @@ trait SongHistoryRecordListStore {
 
 impl SongHistoryRecordListStore for gtk::ListStore {
     fn get_song_history_record(self: &mut Self, iter: &gtk::TreeIter) -> Option<SongHistoryRecord> {
-        let song_name = self.get_value(&iter, 0).get::<String>().ok()??;
+        let song_name = self.get_value(&iter, 0).get::<String>().ok()?;
         let album = self.get_value(&iter, 1).get::<String>().ok()?;
-        let recognition_date = self.get_value(&iter, 2).get::<String>().ok()??;
+        let recognition_date = self.get_value(&iter, 2).get::<String>().ok()?;
         let track_key = self.get_value(&iter, 3).get::<String>().ok()?;
         let release_year = self.get_value(&iter, 4).get::<String>().ok()?;
         let genre = self.get_value(&iter, 5).get::<String>().ok()?;
 
         Some(SongHistoryRecord {
             song_name,
-            album,
-            track_key,
-            release_year,
-            genre,
+            album: Some(album),
+            track_key: Some(track_key),
+            release_year: Some(release_year),
+            genre: Some(genre),
             recognition_date,
         })
     }
 
     fn remove_song(self: &mut Self, to_remove: Song) {
-        if let Some(iter) = self.get_iter_first() {
+        if let Some(iter) = self.iter_first() {
             loop {
                 if let Some(song_history_record) = self.get_song_history_record(&iter) {
                     if song_history_record.get_song() == to_remove {
@@ -51,7 +51,7 @@ impl SongHistoryRecordListStore for gtk::ListStore {
 
     fn remove_song_history_record(self: &mut Self, to_remove: SongHistoryRecord) {
         let song_to_remove: Song = to_remove.get_song();
-        if let Some(iter) = self.get_iter_first() {
+        if let Some(iter) = self.iter_first() {
             loop {
                 if let Some(song_history_record) = self.get_song_history_record(&iter) {
                     if song_history_record.get_song() == song_to_remove {
@@ -68,14 +68,13 @@ impl SongHistoryRecordListStore for gtk::ListStore {
     fn add_song_history_record(self: &mut Self, to_add: &SongHistoryRecord) {
         self.set(
             &self.insert(0),
-            &[0, 1, 2, 3, 4, 5],
             &[
-                &to_add.song_name,
-                &to_add.album,
-                &to_add.recognition_date,
-                &to_add.track_key,
-                &to_add.release_year,
-                &to_add.genre,
+                (0, &to_add.song_name),
+                (1, &to_add.album),
+                (2, &to_add.recognition_date),
+                (3, &to_add.track_key),
+                (4, &to_add.release_year),
+                (5, &to_add.genre),
             ],
         )
     }
@@ -168,7 +167,7 @@ impl SongRecordInterface for RecognitionHistoryInterface {
     fn save(self: &mut Self) {
         let mut writer = csv::Writer::from_path(&self.csv_path).unwrap();
 
-        if let Some(iter) = self.gtk_list_store.get_iter_first() {
+        if let Some(iter) = self.gtk_list_store.iter_first() {
             loop {
                 if let Some(song_history_record) =
                     self.gtk_list_store.get_song_history_record(&iter)
@@ -245,7 +244,7 @@ impl SongRecordInterface for FavoritesInterface {
     fn save(self: &mut Self) {
         let mut writer = csv::Writer::from_path(&self.csv_path).unwrap();
 
-        if let Some(iter) = self.gtk_list_store.get_iter_first() {
+        if let Some(iter) = self.gtk_list_store.iter_first() {
             loop {
                 if let Some(song_history_record) =
                     self.gtk_list_store.get_song_history_record(&iter)
